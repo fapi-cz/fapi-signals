@@ -36,6 +36,12 @@ async function fillInput(page, name, value) {
   }
 }
 
+async function saveSettings(page) {
+  await page.locator('form[action="options.php"]').waitFor({ state: 'visible', timeout: 30000 });
+  await page.getByRole('button', { name: /Uložit|Save changes/i }).click();
+  await page.waitForURL(/settings-updated=true/, { timeout: 15000 });
+}
+
 test('does not inject scripts when consent waiting and no CMP', async ({ page, request }) => {
   await loginIfNeeded(page);
   await resetPlugin(page);
@@ -47,8 +53,7 @@ test('does not inject scripts when consent waiting and no CMP', async ({ page, r
   await setCheckbox(page, 'fapi_signals_settings[fapi_js_enabled]');
   await setCheckbox(page, 'fapi_signals_settings[rewards_script_enabled]');
 
-  await page.click('#submit');
-  await page.waitForURL(/settings-updated=true/);
+  await saveSettings(page);
 
   await page.goto(pageUrl);
 

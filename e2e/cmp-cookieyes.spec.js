@@ -58,7 +58,14 @@ async function fillInput(page, name, value) {
   }
 }
 
+async function saveSettings(page) {
+  await page.locator('form[action="options.php"]').waitFor({ state: 'visible', timeout: 30000 });
+  await page.getByRole('button', { name: /Uložit|Save changes/i }).click();
+  await page.waitForURL(/settings-updated=true/, { timeout: 15000 });
+}
+
 test('cookieyes CMP triggers injection after consent', async ({ page }) => {
+  test.skip(!!process.env.CI, 'CookieYes plugin not installed in CI');
   test.setTimeout(120000);
   await loginIfNeeded(page);
   await resetPlugin(page);
@@ -71,8 +78,7 @@ test('cookieyes CMP triggers injection after consent', async ({ page }) => {
   await setCheckbox(page, 'fapi_signals_settings[fapi_js_enabled]');
   await setCheckbox(page, 'fapi_signals_settings[rewards_script_enabled]');
 
-  await page.click('#submit');
-  await page.waitForURL(/settings-updated=true/);
+  await saveSettings(page);
 
   await page.goto(pageUrl);
 

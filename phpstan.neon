@@ -13,6 +13,6 @@ parameters:
     - src
     - tests
   excludePaths:
-    - vendor
-    - wporg
-    - node_modules
+    - vendor (?)
+    - wporg (?)
+    - node_modules (?)

@@ -59,20 +59,33 @@ jobs:
       - name: Wait for WordPress
         run: |
           for i in $(seq 1 60); do
-            if curl -sf -o /dev/null http://localhost:8071/; then
-              echo "WordPress ready"
+            if curl -sf -o /dev/null --connect-timeout 2 http://127.0.0.1:8071/; then
+              echo "WordPress responding"
               break
             fi
             if [ $i -eq 60 ]; then exit 1; fi
             sleep 5
           done
+          sleep 5
 
       - name: Install WordPress
         run: |
           docker compose exec -T wordpress bash -c 'cd /var/www/html && \
-            curl -sO https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar && chmod +x wp-cli.phar && mv wp-cli.phar /usr/local/bin/wp && \
-            wp core install --url=http://localhost:8071 --title=Test --admin_user=test --admin_password=asdf123jkl --admin_email=test@test.test --skip-email --allow-root 2>/dev/null || true && \
+            (command -v wp >/dev/null 2>&1 || (curl -sO https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar && chmod +x wp-cli.phar && mv wp-cli.phar /usr/local/bin/wp)) && \
+            wp core install --url=http://127.0.0.1:8071 --title=Test --admin_user=test --admin_password=asdf123jkl --admin_email=test@test.test --skip-email --allow-root 2>/dev/null || true && \
             wp plugin activate fapi-signals --allow-root 2>/dev/null || true'
+          sleep 3
+
+      - name: Wait for wp-admin
+        run: |
+          for i in $(seq 1 24); do
+            if curl -sf -o /dev/null -w "%{http_code}" --connect-timeout 2 http://127.0.0.1:8071/wp-admin/ | grep -qE '200|302'; then
+              echo "wp-admin ready"
+              break
+            fi
+            if [ $i -eq 24 ]; then echo "wp-admin timeout"; exit 1; fi
+            sleep 5
+          done
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -88,7 +101,8 @@ jobs:
 
       - name: Playwright E2E
         env:
-          WP_BASE_URL: http://localhost:8071
+          CI: true
+          WP_BASE_URL: http://127.0.0.1:8071
           WP_ADMIN_USER: test
           WP_ADMIN_PASS: asdf123jkl
         run: npm run test:e2e

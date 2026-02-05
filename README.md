@@ -76,6 +76,10 @@ Backend generuje payloady v `PayloadBuilder` a odesila je pres `wp_remote_post`.
 
 Poznamka: testy pouzivaji REST reset endpoint `wp-json/fapi-signals/v1/reset`.
 
+**Lokálně vs. GitHub Actions CI**
+- **Lokálně**: Musí běžet Docker (`make dc-up`). WordPress už máš nainstalovaný a plugin aktivovaný. Všechny 3 E2E testy (včetně CookieYes) běží, pokud máš nainstalovaný plugin CookieYes (cookie-law-info).
+- **CI**: Workflow sám spustí `docker compose up -d`, počká na odpověď, nainstaluje WP přes wp-cli a aktivuje plugin. Test „cookieyes CMP“ se v CI přeskočí (`CI=true`), protože plugin CookieYes v kontejneru není. Ostatní dva E2E testy ověřují injekci pixelů a konverzí.
+
 ### PHPUnit
 Pokud mas nainstalovane dependencies:
 - `php vendor/bin/phpunit`
