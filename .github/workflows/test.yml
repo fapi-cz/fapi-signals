@@ -79,29 +79,38 @@ jobs:
           docker compose exec -T wordpress bash -lc '
             set -e
             cd /var/www/html
-
+      
             # Install WP-CLI if missing
             if ! command -v wp >/dev/null 2>&1; then
               curl -sSLo /usr/local/bin/wp https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
               chmod +x /usr/local/bin/wp
             fi
-
-            # Wait for database connection (max ~60s)
-            for i in {1..30}; do
+      
+            # Debug: show wp-config DB settings (safe-ish)
+            php -r "
+            if (file_exists(\"wp-config.php\")) {
+              include \"wp-config.php\";
+              echo \"DB_NAME=\".DB_NAME.PHP_EOL;
+              echo \"DB_USER=\".DB_USER.PHP_EOL;
+              echo \"DB_HOST=\".DB_HOST.PHP_EOL;
+            } else {
+              echo \"wp-config.php not found\".PHP_EOL;
+            }"
+      
+            # Wait for DB (max ~2 min)
+            for i in {1..60}; do
               if wp db check --allow-root >/dev/null 2>&1; then
                 echo "Database ready"
                 break
               fi
-
-              if [ "$i" -eq 30 ]; then
+              if [ "$i" -eq 60 ]; then
                 echo "Database timeout"
+                wp db check --allow-root || true
                 exit 1
               fi
-
               sleep 2
             done
-
-            # Install WordPress only if not installed
+      
             if ! wp core is-installed --allow-root >/dev/null 2>&1; then
               wp core install \
                 --url="http://127.0.0.1:8071" \
@@ -111,13 +120,9 @@ jobs:
                 --admin_email="test@test.test" \
                 --skip-email \
                 --allow-root
-            else
-              echo "WordPress already installed"
             fi
-
-            # Activate plugin
+      
             wp plugin activate fapi-signals --allow-root
-
             echo "WordPress + plugin ready"
           '
 
