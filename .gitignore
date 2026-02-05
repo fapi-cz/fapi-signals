@@ -1,0 +1,15 @@
+node_modules/
+vendor/
+test-results/
+playwright-report/
+playwright/.cache/
+blob-report/
+.phpunit.result.cache
+wporg/
+
+.DS_Store
+Thumbs.db
+*.log
+.env
+.env.local
+.env.*.local

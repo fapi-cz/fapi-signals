@@ -1,0 +1,15 @@
+parameters:
+  level: 6
+  ignoreErrors:
+    - '#Function .* not found\.#'
+    - '#Instantiated class .* not found\.#'
+    - '#class\.notFound#'
+  paths:
+    - fapi-signals.php
+    - uninstall.php
+    - src
+    - tests
+  excludePaths:
+    - vendor
+    - wporg
+    - node_modules

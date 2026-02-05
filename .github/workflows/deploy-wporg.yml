@@ -1,0 +1,47 @@
+name: Deploy to WordPress.org SVN
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Prepare build directory
+        run: |
+          mkdir -p wporg/trunk wporg/assets wporg/tags
+          rsync -av --delete \
+            --exclude "wporg/" \
+            --exclude ".git/" \
+            --exclude ".github/" \
+            --exclude "node_modules/" \
+            --exclude "tests/" \
+            --exclude "e2e/" \
+            --exclude "test-results/" \
+            --exclude "docker-compose.yml" \
+            --exclude "Dockerfile" \
+            --exclude "README.md" \
+            --exclude "SPECIFICATION.md" \
+            --exclude "package.json" \
+            --exclude "package-lock.json" \
+            --exclude "playwright.config.js" \
+            --exclude "phpunit.xml" \
+            --exclude ".phpunit.result.cache" \
+            --exclude ".env" \
+            --exclude ".gitignore" \
+            --exclude ".cursorignore" \
+            ./ wporg/trunk/
+
+      - name: Deploy to WordPress.org SVN
+        uses: 10up/action-wordpress-plugin-deploy@stable
+        env:
+          SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
+          SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
+          SLUG: fapi-signals
+          BUILD_DIR: wporg/trunk
+          ASSETS_DIR: wporg/assets

@@ -1,0 +1,22 @@
+{
+  "name": "fapi/fapi-signals",
+  "type": "project",
+  "require": {
+    "php": "^8.0"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^10.0",
+    "phpstan/phpstan": "^2.1",
+    "squizlabs/php_codesniffer": "^4.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "FapiConversionPlugin\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "FapiConversionPlugin\\Tests\\": "tests/"
+    }
+  }
+}
