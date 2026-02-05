@@ -74,57 +74,49 @@ jobs:
             sleep 2
           done
 
-      - name: Bootstrap WordPress (install + plugin)
-        run: |
-          docker compose exec -T wordpress bash -lc '
-            set -e
-            cd /var/www/html
-      
-            # Install WP-CLI if missing
-            if ! command -v wp >/dev/null 2>&1; then
-              curl -sSLo /usr/local/bin/wp https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
-              chmod +x /usr/local/bin/wp
-            fi
-      
-            # Debug: show wp-config DB settings (safe-ish)
-            php -r "
-            if (file_exists(\"wp-config.php\")) {
-              include \"wp-config.php\";
-              echo \"DB_NAME=\".DB_NAME.PHP_EOL;
-              echo \"DB_USER=\".DB_USER.PHP_EOL;
-              echo \"DB_HOST=\".DB_HOST.PHP_EOL;
-            } else {
-              echo \"wp-config.php not found\".PHP_EOL;
-            }"
-      
-            # Wait for DB (max ~2 min)
-            for i in {1..60}; do
-              if wp db check --allow-root >/dev/null 2>&1; then
-                echo "Database ready"
-                break
+          - name: Bootstrap WordPress (install + plugin)
+          run: |
+            docker compose exec -T wordpress bash -lc '
+              set -e
+              cd /var/www/html
+        
+              # Install WP-CLI if missing
+              if ! command -v wp >/dev/null 2>&1; then
+                curl -sSLo /usr/local/bin/wp https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+                chmod +x /usr/local/bin/wp
               fi
-              if [ "$i" -eq 60 ]; then
-                echo "Database timeout"
-                wp db check --allow-root || true
-                exit 1
+        
+              # Wait for DB without mysql client (max ~120s)
+              php -r "
+              \$host = getenv(\"WORDPRESS_DB_HOST\") ?: getenv(\"MYSQL_HOST\") ?: \"db\";
+              \$port = 3306;
+              if (strpos(\$host, \":\") !== false) { [\$host,\$p] = explode(\":\", \$host, 2); \$port = (int)\$p; }
+              for (\$i=1; \$i<=60; \$i++) {
+                \$fp = @fsockopen(\$host, \$port, \$errno, \$errstr, 2);
+                if (\$fp) { fclose(\$fp); echo \"DB port reachable at {\$host}:{\$port}\\n\"; exit(0); }
+                if (\$i===60) { fwrite(STDERR, \"DB timeout at {\$host}:{\$port} ({\$errno}) {\$errstr}\\n\"); exit(1); }
+                sleep(2);
+              }"
+        
+              # Install WordPress only if not installed
+              if ! wp core is-installed --allow-root --url="http://127.0.0.1:8071" >/dev/null 2>&1; then
+                wp core install \
+                  --url="http://127.0.0.1:8071" \
+                  --title="Test" \
+                  --admin_user="test" \
+                  --admin_password="asdf123jkl" \
+                  --admin_email="test@test.test" \
+                  --skip-email \
+                  --allow-root
+              else
+                echo "WordPress already installed"
               fi
-              sleep 2
-            done
-      
-            if ! wp core is-installed --allow-root >/dev/null 2>&1; then
-              wp core install \
-                --url="http://127.0.0.1:8071" \
-                --title="Test" \
-                --admin_user="test" \
-                --admin_password="asdf123jkl" \
-                --admin_email="test@test.test" \
-                --skip-email \
-                --allow-root
-            fi
-      
-            wp plugin activate fapi-signals --allow-root
-            echo "WordPress + plugin ready"
-          '
+        
+              # Activate plugin
+              wp plugin activate fapi-signals --allow-root --url="http://127.0.0.1:8071" || true
+        
+              echo "WordPress + plugin ready"
+            '
 
       - name: Wait for wp-login.php
         run: |
