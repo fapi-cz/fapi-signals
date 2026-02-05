@@ -1,0 +1,141 @@
+name: Tests
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  php:
+    name: PHP
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          extensions: dom, json, libxml, mbstring
+          coverage: none
+
+      - name: Get composer cache dir
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - name: Cache composer
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - name: Install dependencies
+        run: composer install --no-progress --prefer-dist
+
+      - name: PHPUnit
+        run: php vendor/bin/phpunit
+
+      - name: PHPStan
+        run: php vendor/bin/phpstan analyse -c phpstan.neon
+
+      - name: PHPCS
+        run: php vendor/bin/phpcs --standard=phpcs.xml
+
+  e2e:
+    name: E2E
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Start WordPress
+        run: docker compose up -d
+
+      - name: Wait for WordPress
+        run: |
+          for i in $(seq 1 60); do
+            if curl -sf -o /dev/null http://localhost:8071/; then
+              echo "WordPress ready"
+              break
+            fi
+            if [ $i -eq 60 ]; then exit 1; fi
+            sleep 5
+          done
+
+      - name: Install WordPress
+        run: |
+          docker compose exec -T wordpress bash -c 'cd /var/www/html && \
+            curl -sO https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar && chmod +x wp-cli.phar && mv wp-cli.phar /usr/local/bin/wp && \
+            wp core install --url=http://localhost:8071 --title=Test --admin_user=test --admin_password=asdf123jkl --admin_email=test@test.test --skip-email --allow-root 2>/dev/null || true && \
+            wp plugin activate fapi-signals --allow-root 2>/dev/null || true'
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+
+      - name: Playwright E2E
+        env:
+          WP_BASE_URL: http://localhost:8071
+          WP_ADMIN_USER: test
+          WP_ADMIN_PASS: asdf123jkl
+        run: npm run test:e2e
+
+      - name: Stop WordPress
+        if: always()
+        run: docker compose down
+
+  deploy-wporg:
+    name: Deploy to WordPress.org
+    runs-on: ubuntu-latest
+    if: false
+    needs: [php]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Prepare build directory
+        run: |
+          mkdir -p wporg/trunk wporg/assets wporg/tags
+          rsync -av --delete \
+            --exclude "wporg/" \
+            --exclude ".git/" \
+            --exclude ".github/" \
+            --exclude "node_modules/" \
+            --exclude "tests/" \
+            --exclude "e2e/" \
+            --exclude "test-results/" \
+            --exclude "docker-compose.yml" \
+            --exclude "Dockerfile" \
+            --exclude "README.md" \
+            --exclude "SPECIFICATION.md" \
+            --exclude "package.json" \
+            --exclude "package-lock.json" \
+            --exclude "playwright.config.js" \
+            --exclude "phpunit.xml" \
+            --exclude ".phpunit.result.cache" \
+            --exclude ".env" \
+            --exclude ".gitignore" \
+            --exclude ".cursorignore" \
+            ./ wporg/trunk/
+
+      - name: Deploy to WordPress.org SVN
+        uses: 10up/action-wordpress-plugin-deploy@stable
+        env:
+          SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
+          SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
+          SLUG: fapi-signals
+          BUILD_DIR: wporg/trunk
+          ASSETS_DIR: wporg/assets

@@ -8,6 +8,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    if: false # TODO: Uncomment this when the plugin is ready for deployment
     steps:
       - name: Checkout
         uses: actions/checkout@v4
