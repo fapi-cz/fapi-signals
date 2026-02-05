@@ -78,12 +78,13 @@ jobs:
 
       - name: Wait for wp-admin
         run: |
-          for i in $(seq 1 24); do
-            if curl -sf -o /dev/null -w "%{http_code}" --connect-timeout 2 http://127.0.0.1:8071/wp-admin/ | grep -qE '200|302'; then
-              echo "wp-admin ready"
+          for i in $(seq 1 36); do
+            code=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 5 --max-time 10 http://127.0.0.1:8071/wp-login.php || echo "000")
+            if echo "$code" | grep -qE '^200$'; then
+              echo "wp-admin ready (wp-login.php returned $code)"
               break
             fi
-            if [ $i -eq 24 ]; then echo "wp-admin timeout"; exit 1; fi
+            if [ $i -eq 36 ]; then echo "wp-admin timeout (last code: $code)"; exit 1; fi
             sleep 5
           done
 
