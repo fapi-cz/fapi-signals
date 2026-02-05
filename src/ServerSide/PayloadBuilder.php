@@ -31,19 +31,6 @@ class PayloadBuilder
             $payloads[$endpoint] = $metaPayload;
         }
 
-        if ($platform === 'ga4' && $settings['ga4_ss_pageview_enabled'] && $settings['ga4_api_secret'] && $settings['ga4_measurement_id']) {
-            $endpoint = 'https://www.google-analytics.com/mp/collect?measurement_id=' . rawurlencode($settings['ga4_measurement_id']) . '&api_secret=' . rawurlencode($settings['ga4_api_secret']);
-            $payloads[$endpoint] = [
-                'client_id' => $eventId,
-                'events' => [[
-                    'name' => 'page_view',
-                    'params' => [
-                        'page_location' => $url,
-                    ],
-                ]],
-            ];
-        }
-
         if ($platform === 'tiktok' && $settings['tiktok_ss_pageview_enabled'] && $settings['tiktok_access_token'] && $settings['tiktok_pixel_id']) {
             $endpoint = 'https://business-api.tiktok.com/open_api/v1.3/event/track/';
             $tiktokPayload = [
@@ -96,6 +83,39 @@ class PayloadBuilder
         }
 
         return $payloads;
+    }
+
+    /**
+     * @return array<string, array<string, mixed>>
+     */
+    public function getPixelUserData(): array
+    {
+        $profile = $this->buildUserProfile();
+        if (count($profile) === 0) {
+            return [];
+        }
+        $out = [];
+        $meta = $this->buildMetaUserData($profile);
+        if (count($meta) > 0) {
+            $out['meta'] = $meta;
+        }
+        $ga4 = $this->buildGa4PixelUserData($profile);
+        if (count($ga4) > 0) {
+            $out['ga4'] = $ga4;
+        }
+        $tiktok = $this->buildTikTokUserData($profile);
+        if (count($tiktok) > 0) {
+            $out['tiktok'] = $tiktok;
+        }
+        $pinterest = $this->buildPinterestUserData($profile);
+        if (count($pinterest) > 0) {
+            $out['pinterest'] = $pinterest;
+        }
+        $linkedin = $this->buildLinkedinUserData($profile);
+        if (count($linkedin) > 0) {
+            $out['linkedin'] = $linkedin;
+        }
+        return $out;
     }
 
     /**
@@ -172,6 +192,44 @@ class PayloadBuilder
      * @param array<string, string> $profile
      * @return array<string, mixed>
      */
+    private function buildGa4PixelUserData(array $profile): array
+    {
+        $data = [];
+        if ($this->hasProfileValue($profile, 'email')) {
+            $data['email'] = $this->hashValue($profile['email']);
+        }
+        if ($this->hasProfileValue($profile, 'phone')) {
+            $data['phone_number'] = $this->hashValue($profile['phone']);
+        }
+        $address = [];
+        if ($this->hasProfileValue($profile, 'first_name')) {
+            $address['first_name'] = $this->hashValue($profile['first_name']);
+        }
+        if ($this->hasProfileValue($profile, 'last_name')) {
+            $address['last_name'] = $this->hashValue($profile['last_name']);
+        }
+        if ($this->hasProfileValue($profile, 'city')) {
+            $address['city'] = $this->hashValue($this->normalizeText($profile['city']));
+        }
+        if ($this->hasProfileValue($profile, 'state')) {
+            $address['region'] = $this->hashValue($this->normalizeText($profile['state']));
+        }
+        if ($this->hasProfileValue($profile, 'zip')) {
+            $address['postal_code'] = $this->hashValue($this->normalizeText($profile['zip']));
+        }
+        if ($this->hasProfileValue($profile, 'country')) {
+            $address['country'] = $this->hashValue($this->normalizeText($profile['country']));
+        }
+        if (count($address) > 0) {
+            $data['address'] = $address;
+        }
+        return $data;
+    }
+
+    /**
+     * @param array<string, string> $profile
+     * @return array<string, mixed>
+     */
     private function buildTikTokUserData(array $profile): array
     {
         $data = [];
@@ -197,7 +255,7 @@ class PayloadBuilder
     private function buildPinterestUserData(array $profile): array
     {
         $data = [];
-        if (!empty($profile['email'])) {
+        if ($this->hasProfileValue($profile, 'email')) {
             $data['em'] = $this->hashValue($profile['email']);
         }
         if ($this->hasProfileValue($profile, 'phone')) {

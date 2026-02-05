@@ -39,7 +39,7 @@ class Settings
             'google_ads_id' => '',
             'google_ads_conversion_enabled' => true,
 
-            'affilbox_conversion_enabled' => true,
+            'affilbox_conversion_enabled' => false,
             'affilbox_url' => '',
             'affilbox_campaign_id' => '',
 
@@ -48,7 +48,7 @@ class Settings
             'cj_action_tracker_id' => '',
             'cj_cjevent_order' => '',
 
-            'sklik_conversion_enabled' => true,
+            'sklik_conversion_enabled' => false,
             'sklik_id' => '',
             'sklik_zbozi_id' => '',
 
@@ -57,9 +57,6 @@ class Settings
 
             'meta_capi_pageview_enabled' => false,
             'meta_capi_access_token' => '',
-
-            'ga4_ss_pageview_enabled' => false,
-            'ga4_api_secret' => '',
 
             'tiktok_ss_pageview_enabled' => false,
             'tiktok_access_token' => '',
@@ -77,6 +74,13 @@ class Settings
             'consent_mode' => 'wait',
             'consent_fallback' => 'block',
         ];
+    }
+
+    public static function createOnActivation(): void
+    {
+        if (get_option(self::OPTION_KEY) === false) {
+            update_option(self::OPTION_KEY, self::defaults());
+        }
     }
 
     /**

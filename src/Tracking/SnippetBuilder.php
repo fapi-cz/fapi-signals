@@ -14,27 +14,32 @@ class SnippetBuilder
 
     /**
      * @param array<string, mixed> $settings
+     * @param array<string, array<string, mixed>> $pixelUserData
      * @return array<int, string>
      */
-    public function buildPixelSnippets(array $settings, string $eventId = ''): array
+    public function buildPixelSnippets(array $settings, string $eventId = '', array $pixelUserData = []): array
     {
         $snippets = [];
 
         if ($settings['meta_pixel_enabled'] && $settings['meta_pixel_id']) {
             $id = $this->escape($settings['meta_pixel_id']);
             $eventIdPart = '';
-
             if ($eventId !== '') {
                 $escapedEventId = $this->escape($eventId);
                 $eventIdPart = ", {}, {eventID: '{$escapedEventId}'}";
             }
-
-            $snippets[] = "<script>!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window, document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','{$id}');fbq('track','PageView'{$eventIdPart});</script>";
+            $initArg = isset($pixelUserData['meta']) && count($pixelUserData['meta']) > 0
+                ? ',' . wp_json_encode($pixelUserData['meta'])
+                : '';
+            $snippets[] = "<script>!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window, document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','{$id}'{$initArg});fbq('track','PageView'{$eventIdPart});</script>";
         }
 
         if ($settings['ga4_pixel_enabled'] && $settings['ga4_measurement_id']) {
             $id = $this->escape($settings['ga4_measurement_id']);
-            $snippets[] = "<script async src=\"https://www.googletagmanager.com/gtag/js?id={$id}\"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','{$id}');</script>";
+            $userDataPart = isset($pixelUserData['ga4']) && count($pixelUserData['ga4']) > 0
+                ? "gtag('set','user_data'," . wp_json_encode($pixelUserData['ga4']) . ");"
+                : '';
+            $snippets[] = "<script async src=\"https://www.googletagmanager.com/gtag/js?id={$id}\"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());" . $userDataPart . "gtag('config','{$id}');</script>";
         }
 
         if ($settings['gtm_pixel_enabled'] && $settings['gtm_container_id']) {
@@ -44,17 +49,26 @@ class SnippetBuilder
 
         if ($settings['google_ads_pixel_enabled'] && $settings['google_ads_id']) {
             $id = $this->escape($settings['google_ads_id']);
-            $snippets[] = "<script async src=\"https://www.googletagmanager.com/gtag/js?id={$id}\"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','{$id}');</script>";
+            $userDataPart = isset($pixelUserData['ga4']) && count($pixelUserData['ga4']) > 0
+                ? "gtag('set','user_data'," . wp_json_encode($pixelUserData['ga4']) . ");"
+                : '';
+            $snippets[] = "<script async src=\"https://www.googletagmanager.com/gtag/js?id={$id}\"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());" . $userDataPart . "gtag('config','{$id}');</script>";
         }
 
         if ($settings['tiktok_pixel_enabled'] && $settings['tiktok_pixel_id']) {
             $id = $this->escape($settings['tiktok_pixel_id']);
-            $snippets[] = "<script>!function(w,d,t){w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=['page','track','identify','instances','debug','on','off','once','ready','alias','group','enableCookie','disableCookie'];ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){var e=ttq._i[t]||[];for(var n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n]);return e};ttq.load=function(e,n){var i='https://analytics.tiktok.com/i18n/pixel/events.js';ttq._i=ttq._i||{};ttq._i[e]=[];ttq._i[e]._u=i;ttq._t=ttq._t||{};ttq._t[e]=+new Date;ttq._o=ttq._o||{};ttq._o[e]=n||{};var o=document.createElement('script');o.type='text/javascript';o.async=!0;o.src=i+'?sdkid='+e+'&lib='+t;var a=document.getElementsByTagName('script')[0];a.parentNode.insertBefore(o,a)};ttq.load('{$id}');ttq.page();}(window,document,'ttq');</script>";
+            $identifyPart = isset($pixelUserData['tiktok']) && count($pixelUserData['tiktok']) > 0
+                ? "ttq.identify(" . wp_json_encode(['user' => $pixelUserData['tiktok']]) . ");"
+                : '';
+            $snippets[] = "<script>!function(w,d,t){w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=['page','track','identify','instances','debug','on','off','once','ready','alias','group','enableCookie','disableCookie'];ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){var e=ttq._i[t]||[];for(var n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n]);return e};ttq.load=function(e,n){var i='https://analytics.tiktok.com/i18n/pixel/events.js';ttq._i=ttq._i||{};ttq._i[e]=[];ttq._i[e]._u=i;ttq._t=ttq._t||{};ttq._t[e]=+new Date;ttq._o=ttq._o||{};ttq._o[e]=n||{};var o=document.createElement('script');o.type='text/javascript';o.async=!0;o.src=i+'?sdkid='+e+'&lib='+t;var a=document.getElementsByTagName('script')[0];a.parentNode.insertBefore(o,a)};ttq.load('{$id}');" . $identifyPart . "ttq.page();}(window,document,'ttq');</script>";
         }
 
         if ($settings['pinterest_pixel_enabled'] && $settings['pinterest_tag_id']) {
             $id = $this->escape($settings['pinterest_tag_id']);
-            $snippets[] = "<script>!function(e){if(!window.pintrk){window.pintrk=function(){window.pintrk.queue.push(Array.prototype.slice.call(arguments))};var n=window.pintrk;n.queue=[],n.version='3.0';var t=document.createElement('script');t.async=!0,t.src=e;var r=document.getElementsByTagName('script')[0];r.parentNode.insertBefore(t,r)}}('https://s.pinimg.com/ct/core.js');pintrk('load','{$id}');pintrk('page');</script>";
+            $loadArg = isset($pixelUserData['pinterest']) && count($pixelUserData['pinterest']) > 0
+                ? "," . wp_json_encode($pixelUserData['pinterest'])
+                : '';
+            $snippets[] = "<script>!function(e){if(!window.pintrk){window.pintrk=function(){window.pintrk.queue.push(Array.prototype.slice.call(arguments))};var n=window.pintrk;n.queue=[],n.version='3.0';var t=document.createElement('script');t.async=!0,t.src=e;var r=document.getElementsByTagName('script')[0];r.parentNode.insertBefore(t,r)}}('https://s.pinimg.com/ct/core.js');pintrk('load','{$id}'{$loadArg});pintrk('page');</script>";
         }
 
         if ($settings['linkedin_pixel_enabled'] && $settings['linkedin_partner_id']) {
@@ -108,7 +122,7 @@ class SnippetBuilder
             $calls[] = "FAPI_CONVERSION.simpleSklikTransaction(fapiOrderData, {$sklik}, {$zbozi});";
         }
 
-        if (!$calls) {
+        if (count($calls) === 0) {
             return '';
         }
 

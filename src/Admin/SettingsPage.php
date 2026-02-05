@@ -237,7 +237,6 @@ class SettingsPage
             'sklik_id' => __('Napriklad: 123456', 'fapi-signals'),
             'sklik_zbozi_id' => __('Napriklad: 123456', 'fapi-signals'),
             'meta_capi_access_token' => __('Meta CAPI Access Token', 'fapi-signals'),
-            'ga4_api_secret' => __('GA4 API Secret', 'fapi-signals'),
             'tiktok_access_token' => __('TikTok Access Token', 'fapi-signals'),
             'pinterest_access_token' => __('Pinterest Access Token', 'fapi-signals'),
             'linkedin_access_token' => __('LinkedIn Access Token', 'fapi-signals'),
@@ -276,7 +275,6 @@ class SettingsPage
                 'fields' => [
                     ['type' => 'input', 'key' => 'ga4_measurement_id', 'label' => __('GA4 Measurement ID', 'fapi-signals')],
                     ['type' => 'toggle', 'key' => 'ga4_conversion_enabled', 'label' => __('Konverze do GA4', 'fapi-signals')],
-                    ['type' => 'toggle_input', 'key' => 'ga4_ss_pageview_enabled', 'input' => 'ga4_api_secret', 'label' => __('Server-side PageView', 'fapi-signals')],
                 ],
             ],
             [

@@ -24,6 +24,10 @@ if (file_exists($autoload)) {
     require $autoload;
 }
 
+register_activation_hook(__FILE__, function (): void {
+    FapiSignalsPlugin\Settings::createOnActivation();
+});
+
 add_action('plugins_loaded', function () {
     $plugin = new FapiSignalsPlugin\Plugin();
     $plugin->init();

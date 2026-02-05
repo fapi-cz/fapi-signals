@@ -3,14 +3,17 @@
 namespace FapiSignalsPlugin\Tracking;
 
 use FapiSignalsPlugin\Settings;
+use FapiSignalsPlugin\ServerSide\PayloadBuilder;
 
 class PixelInjector
 {
     private SnippetBuilder $builder;
+    private PayloadBuilder $payloadBuilder;
 
     public function __construct()
     {
         $this->builder = new SnippetBuilder();
+        $this->payloadBuilder = new PayloadBuilder();
     }
 
     public function render(): void
@@ -19,7 +22,8 @@ class PixelInjector
         $eventId = function_exists('wp_generate_uuid4')
             ? wp_generate_uuid4()
             : bin2hex(random_bytes(16));
-        $pixelSnippets = $this->builder->buildPixelSnippets($settings, $eventId);
+        $pixelUserData = $this->payloadBuilder->getPixelUserData();
+        $pixelSnippets = $this->builder->buildPixelSnippets($settings, $eventId, $pixelUserData);
 
         if (!$pixelSnippets) {
             $pixelSnippets = [];
@@ -47,7 +51,6 @@ class PixelInjector
             'event_id' => $eventId,
             'server_side' => [
                 'meta' => $settings['meta_capi_pageview_enabled'],
-                'ga4' => $settings['ga4_ss_pageview_enabled'],
                 'tiktok' => $settings['tiktok_ss_pageview_enabled'],
                 'pinterest' => $settings['pinterest_ss_pageview_enabled'],
                 'linkedin' => $settings['linkedin_ss_pageview_enabled'],
@@ -160,7 +163,6 @@ class PixelInjector
                 var url = window.location.href;
                 var platforms = [];
                 if (cfg.settings.server_side.meta) platforms.push('meta');
-                if (cfg.settings.server_side.ga4) platforms.push('ga4');
                 if (cfg.settings.server_side.tiktok) platforms.push('tiktok');
                 if (cfg.settings.server_side.pinterest) platforms.push('pinterest');
                 if (cfg.settings.server_side.linkedin) platforms.push('linkedin');
