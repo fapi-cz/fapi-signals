@@ -74,37 +74,37 @@ jobs:
             sleep 2
           done
 
-          - name: Bootstrap WordPress (install + plugin)
-          run: |
-            docker compose exec -T wordpress bash -lc '
-              set -e
-              cd /var/www/html
-        
-              # Install WP-CLI if missing
-              if ! command -v wp >/dev/null 2>&1; then
-                curl -sSLo /usr/local/bin/wp https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
-                chmod +x /usr/local/bin/wp
-              fi
-        
-              # Install WordPress only if not installed
-              if ! wp core is-installed --allow-root --url="http://127.0.0.1:8071" >/dev/null 2>&1; then
-                wp core install \
-                  --url="http://127.0.0.1:8071" \
-                  --title="Test" \
-                  --admin_user="test" \
-                  --admin_password="asdf123jkl" \
-                  --admin_email="test@test.test" \
-                  --skip-email \
-                  --allow-root
-              else
-                echo "WordPress already installed"
-              fi
-        
-              # Activate plugin
-              wp plugin activate fapi-signals --allow-root --url="http://127.0.0.1:8071" || true
-        
-              echo "WordPress + plugin ready"
-            '
+      - name: Bootstrap WordPress (install + plugin)
+        run: |
+          docker compose exec -T wordpress bash -lc '
+            set -e
+            cd /var/www/html
+      
+            # Install WP-CLI if missing
+            if ! command -v wp >/dev/null 2>&1; then
+              curl -sSLo /usr/local/bin/wp https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+              chmod +x /usr/local/bin/wp
+            fi
+      
+            # Install WordPress only if not installed
+            if ! wp core is-installed --allow-root --url="http://127.0.0.1:8071" >/dev/null 2>&1; then
+              wp core install \
+                --url="http://127.0.0.1:8071" \
+                --title="Test" \
+                --admin_user="test" \
+                --admin_password="asdf123jkl" \
+                --admin_email="test@test.test" \
+                --skip-email \
+                --allow-root
+            else
+              echo "WordPress already installed"
+            fi
+      
+            # Activate plugin
+            wp plugin activate fapi-signals --allow-root --url="http://127.0.0.1:8071" || true
+      
+            echo "WordPress + plugin ready"
+          '
 
       - name: Wait for wp-login.php
         run: |
