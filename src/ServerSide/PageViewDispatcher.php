@@ -1,8 +1,8 @@
 <?php
 
-namespace FapiConversionPlugin\ServerSide;
+namespace FapiSignalsPlugin\ServerSide;
 
-use FapiConversionPlugin\Settings;
+use FapiSignalsPlugin\Settings;
 
 class PageViewDispatcher
 {

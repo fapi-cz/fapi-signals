@@ -35,8 +35,8 @@ namespace {
     }
 }
 
-namespace FapiConversionPlugin\Tests {
-    use FapiConversionPlugin\ServerSide\PayloadBuilder;
+namespace FapiSignalsPlugin\Tests {
+    use FapiSignalsPlugin\ServerSide\PayloadBuilder;
     use PHPUnit\Framework\TestCase;
 
     class PayloadBuilderTest extends TestCase

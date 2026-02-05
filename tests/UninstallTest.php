@@ -14,7 +14,7 @@ namespace {
     }
 }
 
-namespace FapiConversionPlugin\Tests {
+namespace FapiSignalsPlugin\Tests {
     use PHPUnit\Framework\TestCase;
 
     class UninstallTest extends TestCase

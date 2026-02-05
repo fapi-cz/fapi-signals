@@ -19,7 +19,7 @@ namespace {
     }
 }
 
-namespace FapiConversionPlugin\Tests {
+namespace FapiSignalsPlugin\Tests {
     require_once __DIR__ . '/../src/Plugin.php';
     require_once __DIR__ . '/../src/Admin/SettingsPage.php';
     require_once __DIR__ . '/../src/Tracking/PixelInjector.php';
@@ -29,7 +29,7 @@ namespace FapiConversionPlugin\Tests {
     require_once __DIR__ . '/../src/ServerSide/PageViewDispatcher.php';
     require_once __DIR__ . '/../src/Admin/ResetController.php';
 
-    use FapiConversionPlugin\Plugin;
+    use FapiSignalsPlugin\Plugin;
     use PHPUnit\Framework\TestCase;
 
     class PluginInitTest extends TestCase

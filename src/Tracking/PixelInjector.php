@@ -1,8 +1,8 @@
 <?php
 
-namespace FapiConversionPlugin\Tracking;
+namespace FapiSignalsPlugin\Tracking;
 
-use FapiConversionPlugin\Settings;
+use FapiSignalsPlugin\Settings;
 
 class PixelInjector
 {

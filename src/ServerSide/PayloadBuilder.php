@@ -1,6 +1,6 @@
 <?php
 
-namespace FapiConversionPlugin\ServerSide;
+namespace FapiSignalsPlugin\ServerSide;
 
 class PayloadBuilder
 {

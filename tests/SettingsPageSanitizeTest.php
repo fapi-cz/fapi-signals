@@ -21,10 +21,10 @@ namespace {
     }
 }
 
-namespace FapiConversionPlugin\Tests {
+namespace FapiSignalsPlugin\Tests {
     require_once __DIR__ . '/../src/Admin/SettingsPage.php';
 
-    use FapiConversionPlugin\Admin\SettingsPage;
+    use FapiSignalsPlugin\Admin\SettingsPage;
     use PHPUnit\Framework\TestCase;
 
     class SettingsPageSanitizeTest extends TestCase

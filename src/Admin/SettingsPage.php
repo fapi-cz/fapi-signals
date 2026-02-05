@@ -1,8 +1,8 @@
 <?php
 
-namespace FapiConversionPlugin\Admin;
+namespace FapiSignalsPlugin\Admin;
 
-use FapiConversionPlugin\Settings;
+use FapiSignalsPlugin\Settings;
 
 class SettingsPage
 {

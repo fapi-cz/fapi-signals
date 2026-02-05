@@ -1,6 +1,6 @@
 <?php
 
-namespace FapiConversionPlugin;
+namespace FapiSignalsPlugin;
 
 class Settings
 {

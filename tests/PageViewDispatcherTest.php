@@ -90,10 +90,10 @@ namespace {
     }
 }
 
-namespace FapiConversionPlugin\Tests {
+namespace FapiSignalsPlugin\Tests {
     require_once __DIR__ . '/../src/ServerSide/PageViewDispatcher.php';
 
-    use FapiConversionPlugin\ServerSide\PageViewDispatcher;
+    use FapiSignalsPlugin\ServerSide\PageViewDispatcher;
     use PHPUnit\Framework\TestCase;
 
     class PageViewDispatcherTest extends TestCase

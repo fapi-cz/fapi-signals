@@ -1,6 +1,6 @@
 <?php
 
-namespace FapiConversionPlugin\Debug;
+namespace FapiSignalsPlugin\Debug;
 
 class Logger
 {

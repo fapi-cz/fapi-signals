@@ -1,14 +1,14 @@
 <?php
 
-namespace FapiConversionPlugin;
+namespace FapiSignalsPlugin;
 
-use FapiConversionPlugin\Admin\SettingsPage;
-use FapiConversionPlugin\Tracking\PixelInjector;
-use FapiConversionPlugin\Tracking\ConversionInjector;
-use FapiConversionPlugin\Tracking\FapiSdkInjector;
-use FapiConversionPlugin\Tracking\RewardsInjector;
-use FapiConversionPlugin\Admin\ResetController;
-use FapiConversionPlugin\ServerSide\PageViewDispatcher;
+use FapiSignalsPlugin\Admin\SettingsPage;
+use FapiSignalsPlugin\Tracking\PixelInjector;
+use FapiSignalsPlugin\Tracking\ConversionInjector;
+use FapiSignalsPlugin\Tracking\FapiSdkInjector;
+use FapiSignalsPlugin\Tracking\RewardsInjector;
+use FapiSignalsPlugin\Admin\ResetController;
+use FapiSignalsPlugin\ServerSide\PageViewDispatcher;
 
 class Plugin
 {
@@ -55,7 +55,7 @@ class Plugin
 
     public function enqueueAdminAssets(string $hook): void
     {
-        if ($hook !== 'settings_page_' . \FapiConversionPlugin\Admin\SettingsPage::MENU_SLUG) {
+        if ($hook !== 'settings_page_' . \FapiSignalsPlugin\Admin\SettingsPage::MENU_SLUG) {
             return;
         }
         wp_enqueue_style(

@@ -1,6 +1,6 @@
 <?php
 
-namespace FapiConversionPlugin\Consent;
+namespace FapiSignalsPlugin\Consent;
 
 class ConsentManager
 {

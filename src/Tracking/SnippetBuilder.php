@@ -1,6 +1,6 @@
 <?php
 
-namespace FapiConversionPlugin\Tracking;
+namespace FapiSignalsPlugin\Tracking;
 
 class SnippetBuilder
 {

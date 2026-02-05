@@ -1,8 +1,8 @@
 <?php
 
-namespace FapiConversionPlugin\Tests;
+namespace FapiSignalsPlugin\Tests;
 
-use FapiConversionPlugin\Tracking\SnippetBuilder;
+use FapiSignalsPlugin\Tracking\SnippetBuilder;
 use PHPUnit\Framework\TestCase;
 
 class SnippetBuilderTest extends TestCase

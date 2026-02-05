@@ -25,6 +25,6 @@ if (file_exists($autoload)) {
 }
 
 add_action('plugins_loaded', function () {
-    $plugin = new FapiConversionPlugin\Plugin();
+    $plugin = new FapiSignalsPlugin\Plugin();
     $plugin->init();
 });
