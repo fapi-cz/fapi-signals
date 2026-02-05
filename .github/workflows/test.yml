@@ -49,6 +49,7 @@ jobs:
   e2e:
     name: E2E
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -56,36 +57,89 @@ jobs:
       - name: Start WordPress
         run: docker compose up -d
 
-      - name: Wait for WordPress
+      - name: Wait for HTTP
         run: |
           for i in $(seq 1 60); do
             if curl -sf -o /dev/null --connect-timeout 2 http://127.0.0.1:8071/; then
-              echo "WordPress responding"
+              echo "HTTP responding"
               break
             fi
-            if [ $i -eq 60 ]; then exit 1; fi
-            sleep 5
+
+            if [ $i -eq 60 ]; then
+              echo "HTTP timeout"
+              docker compose logs --no-color
+              exit 1
+            fi
+
+            sleep 2
           done
-          sleep 5
 
-      - name: Install WordPress
+      - name: Bootstrap WordPress (install + plugin)
         run: |
-          docker compose exec -T wordpress bash -c 'cd /var/www/html && \
-            (command -v wp >/dev/null 2>&1 || (curl -sO https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar && chmod +x wp-cli.phar && mv wp-cli.phar /usr/local/bin/wp)) && \
-            wp core install --url=http://127.0.0.1:8071 --title=Test --admin_user=test --admin_password=asdf123jkl --admin_email=test@test.test --skip-email --allow-root 2>/dev/null || true && \
-            wp plugin activate fapi-signals --allow-root 2>/dev/null || true'
-          sleep 3
+          docker compose exec -T wordpress bash -lc '
+            set -e
+            cd /var/www/html
 
-      - name: Wait for wp-admin
+            # Install WP-CLI if missing
+            if ! command -v wp >/dev/null 2>&1; then
+              curl -sSLo /usr/local/bin/wp https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+              chmod +x /usr/local/bin/wp
+            fi
+
+            # Wait for database connection (max ~60s)
+            for i in {1..30}; do
+              if wp db check --allow-root >/dev/null 2>&1; then
+                echo "Database ready"
+                break
+              fi
+
+              if [ "$i" -eq 30 ]; then
+                echo "Database timeout"
+                exit 1
+              fi
+
+              sleep 2
+            done
+
+            # Install WordPress only if not installed
+            if ! wp core is-installed --allow-root >/dev/null 2>&1; then
+              wp core install \
+                --url="http://127.0.0.1:8071" \
+                --title="Test" \
+                --admin_user="test" \
+                --admin_password="asdf123jkl" \
+                --admin_email="test@test.test" \
+                --skip-email \
+                --allow-root
+            else
+              echo "WordPress already installed"
+            fi
+
+            # Activate plugin
+            wp plugin activate fapi-signals --allow-root
+
+            echo "WordPress + plugin ready"
+          '
+
+      - name: Wait for wp-login.php
         run: |
           for i in $(seq 1 36); do
-            code=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 5 --max-time 10 http://127.0.0.1:8071/wp-login.php || echo "000")
-            if echo "$code" | grep -qE '^200$'; then
-              echo "wp-admin ready (wp-login.php returned $code)"
+            code=$(curl -s -o /dev/null -w "%{http_code}" \
+              --connect-timeout 5 --max-time 10 \
+              http://127.0.0.1:8071/wp-login.php || echo "000")
+
+            if [ "$code" = "200" ]; then
+              echo "wp-login.php ready"
               break
             fi
-            if [ $i -eq 36 ]; then echo "wp-admin timeout (last code: $code)"; exit 1; fi
-            sleep 5
+
+            if [ $i -eq 36 ]; then
+              echo "wp-login.php timeout (last code: $code)"
+              docker compose logs --no-color
+              exit 1
+            fi
+
+            sleep 2
           done
 
       - name: Setup Node
@@ -100,7 +154,7 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps
 
-      - name: Playwright E2E
+      - name: Run Playwright E2E
         env:
           CI: true
           WP_BASE_URL: http://127.0.0.1:8071
@@ -108,49 +162,10 @@ jobs:
           WP_ADMIN_PASS: asdf123jkl
         run: npm run test:e2e
 
+      - name: Debug logs (only on failure)
+        if: failure()
+        run: docker compose logs --no-color
+
       - name: Stop WordPress
         if: always()
         run: docker compose down
-
-  deploy-wporg:
-    name: Deploy to WordPress.org
-    runs-on: ubuntu-latest
-    if: false
-    needs: [php]
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Prepare build directory
-        run: |
-          mkdir -p wporg/trunk wporg/assets wporg/tags
-          rsync -av --delete \
-            --exclude "wporg/" \
-            --exclude ".git/" \
-            --exclude ".github/" \
-            --exclude "node_modules/" \
-            --exclude "tests/" \
-            --exclude "e2e/" \
-            --exclude "test-results/" \
-            --exclude "docker-compose.yml" \
-            --exclude "Dockerfile" \
-            --exclude "README.md" \
-            --exclude "SPECIFICATION.md" \
-            --exclude "package.json" \
-            --exclude "package-lock.json" \
-            --exclude "playwright.config.js" \
-            --exclude "phpunit.xml" \
-            --exclude ".phpunit.result.cache" \
-            --exclude ".env" \
-            --exclude ".gitignore" \
-            --exclude ".cursorignore" \
-            ./ wporg/trunk/
-
-      - name: Deploy to WordPress.org SVN
-        uses: 10up/action-wordpress-plugin-deploy@stable
-        env:
-          SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
-          SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
-          SLUG: fapi-signals
-          BUILD_DIR: wporg/trunk
-          ASSETS_DIR: wporg/assets
