@@ -86,18 +86,6 @@ jobs:
                 chmod +x /usr/local/bin/wp
               fi
         
-              # Wait for DB without mysql client (max ~120s)
-              php -r "
-              \$host = getenv(\"WORDPRESS_DB_HOST\") ?: getenv(\"MYSQL_HOST\") ?: \"db\";
-              \$port = 3306;
-              if (strpos(\$host, \":\") !== false) { [\$host,\$p] = explode(\":\", \$host, 2); \$port = (int)\$p; }
-              for (\$i=1; \$i<=60; \$i++) {
-                \$fp = @fsockopen(\$host, \$port, \$errno, \$errstr, 2);
-                if (\$fp) { fclose(\$fp); echo \"DB port reachable at {\$host}:{\$port}\\n\"; exit(0); }
-                if (\$i===60) { fwrite(STDERR, \"DB timeout at {\$host}:{\$port} ({\$errno}) {\$errstr}\\n\"); exit(1); }
-                sleep(2);
-              }"
-        
               # Install WordPress only if not installed
               if ! wp core is-installed --allow-root --url="http://127.0.0.1:8071" >/dev/null 2>&1; then
                 wp core install \
