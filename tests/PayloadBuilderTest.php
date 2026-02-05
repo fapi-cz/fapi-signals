@@ -9,6 +9,7 @@ namespace {
     }
 
     if (!function_exists('wp_get_current_user')) {
+        /** @return \stdClass */
         function wp_get_current_user()
         {
             $user = new stdClass();
@@ -21,6 +22,12 @@ namespace {
     }
 
     if (!function_exists('get_user_meta')) {
+        /**
+         * @param int $userId
+         * @param string $key
+         * @param bool $single
+         * @return mixed
+         */
         function get_user_meta($userId, $key, $single = true)
         {
             return $GLOBALS['testUserMeta'][$key] ?? '';

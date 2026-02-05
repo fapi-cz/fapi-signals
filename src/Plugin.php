@@ -33,7 +33,7 @@ class Plugin
 
     public function init(): void
     {
-        add_action('plugins_loaded', function () {
+        add_action('plugins_loaded', function (): void {
             load_plugin_textdomain(
                 'fapi-signals',
                 false,

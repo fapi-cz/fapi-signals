@@ -6,6 +6,7 @@ namespace {
     }
 
     if (!function_exists('delete_option')) {
+        /** @param string $key */
         function delete_option($key): void
         {
             $GLOBALS['deletedOptions'][] = $key;

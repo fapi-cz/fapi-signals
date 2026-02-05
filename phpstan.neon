@@ -1,9 +1,12 @@
+includes:
+  - phpstan-baseline.neon
+
 parameters:
   level: 6
+  bootstrapFiles:
+    - phpstan-bootstrap.php
   ignoreErrors:
     - '#Function .* not found\.#'
-    - '#Instantiated class .* not found\.#'
-    - '#class\.notFound#'
   paths:
     - fapi-signals.php
     - uninstall.php

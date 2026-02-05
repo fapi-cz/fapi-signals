@@ -110,7 +110,7 @@ class PayloadBuilder
             return [];
         }
         $user = wp_get_current_user();
-        if (!$user || !isset($user->ID) || (int) $user->ID <= 0) {
+        if (!isset($user->ID) || (int) $user->ID <= 0) {
             return [];
         }
 

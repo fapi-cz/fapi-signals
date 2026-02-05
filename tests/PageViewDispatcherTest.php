@@ -2,27 +2,34 @@
 
 namespace {
     if (!function_exists('sanitize_text_field')) {
-        function sanitize_text_field($value)
+        /** @param string $value */
+        function sanitize_text_field($value): string
         {
             return $value;
         }
     }
 
     if (!function_exists('esc_url_raw')) {
-        function esc_url_raw($value)
+        /** @param string $value */
+        function esc_url_raw($value): string
         {
             return $value;
         }
     }
 
     if (!function_exists('wp_generate_uuid4')) {
-        function wp_generate_uuid4()
+        function wp_generate_uuid4(): string
         {
             return 'uuid-1';
         }
     }
 
     if (!function_exists('wp_remote_post')) {
+        /**
+         * @param string $url
+         * @param array<string, mixed> $args
+         * @return array{response: array{code: int}}
+         */
         function wp_remote_post($url, $args)
         {
             $GLOBALS['remotePosts'][] = [$url, $args];
@@ -31,13 +38,19 @@ namespace {
     }
 
     if (!function_exists('wp_json_encode')) {
-        function wp_json_encode($value)
+        /** @param mixed $value */
+        function wp_json_encode($value): string
         {
             return json_encode($value);
         }
     }
 
     if (!function_exists('get_option')) {
+        /**
+         * @param string $key
+         * @param mixed $default
+         * @return mixed
+         */
         function get_option($key, $default = null)
         {
             return $GLOBALS['testOptions'][$key] ?? $default;
@@ -46,13 +59,16 @@ namespace {
 
     class WP_REST_Request
     {
+        /** @var array<string, mixed> */
         private array $params;
 
+        /** @param array<string, mixed> $params */
         public function __construct(array $params)
         {
             $this->params = $params;
         }
 
+        /** @return mixed */
         public function get_param(string $key)
         {
             return $this->params[$key] ?? null;
@@ -61,9 +77,11 @@ namespace {
 
     class WP_REST_Response
     {
+        /** @var array<string, mixed> */
         public array $data;
         public int $status;
 
+        /** @param array<string, mixed> $data */
         public function __construct(array $data, int $status)
         {
             $this->data = $data;
@@ -112,10 +130,12 @@ namespace FapiConversionPlugin\Tests {
             $response = $dispatcher->handlePageView($request);
 
             $this->assertSame('sent', $response->data['status']);
-            $this->assertSame(1, count($GLOBALS['remotePosts']));
+            /** @var list<array{0: string, 1: mixed}> $posts */
+            $posts = $GLOBALS['remotePosts'];
+            $this->assertSame(1, count($posts));
             $this->assertSame(
                 'https://graph.facebook.com/v18.0/123/events?access_token=token',
-                $GLOBALS['remotePosts'][0][0]
+                $posts[0][0]
             );
         }
     }

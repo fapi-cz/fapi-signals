@@ -2,14 +2,19 @@
 
 namespace {
     if (!function_exists('wp_kses')) {
-        function wp_kses($value, $allowed)
+        /**
+         * @param string $value
+         * @param array<string, array<string, bool>> $allowed
+         */
+        function wp_kses($value, $allowed): string
         {
             return $value;
         }
     }
 
     if (!function_exists('sanitize_text_field')) {
-        function sanitize_text_field($value)
+        /** @param string $value */
+        function sanitize_text_field($value): string
         {
             return 'sanitized:' . $value;
         }

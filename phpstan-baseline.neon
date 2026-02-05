@@ -1,0 +1,25 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Method FapiConversionPlugin\\Admin\\SettingsPage\:\:renderConsentSection\(\) is unused\.$#'
+			identifier: method.unused
+			count: 1
+			path: src/Admin/SettingsPage.php
+
+		-
+			message: '#^Call to function load_plugin_textdomain\(\) on a separate line has no effect\.$#'
+			identifier: function.resultUnused
+			count: 1
+			path: src/Plugin.php
+
+		-
+			message: '#^Function load_plugin_textdomain invoked with 3 parameters, 0 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: src/Plugin.php
+
+		-
+			message: '#^Parameter \#2 \$callback of function add_action expects callable\(mixed \.\.\.\)\: mixed, array\{\$this\(FapiConversionPlugin\\Plugin\), ''enqueueAdminAssets''\} given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Plugin.php

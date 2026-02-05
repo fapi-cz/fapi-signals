@@ -2,6 +2,10 @@
 
 namespace {
     if (!function_exists('add_action')) {
+        /**
+         * @param string $hook
+         * @param callable(mixed...): mixed $callback
+         */
         function add_action($hook, $callback): void
         {
             $GLOBALS['testActions'][] = [$hook, $callback];

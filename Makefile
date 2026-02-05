@@ -1,4 +1,4 @@
-.PHONY: install install-php install-js test test-php test-e2e phpstan phpcs lint-php dc-up dc-down wporg-sync release-prepare
+.PHONY: install install-php install-js test test-php test-e2e phpstan phpstan-baseline phpcs lint-php dc-up dc-down wporg-sync release-prepare
 
 install: install-php install-js
 
@@ -18,6 +18,9 @@ test-e2e:
 
 phpstan:
 	php vendor/bin/phpstan analyse -c phpstan.neon
+
+phpstan-baseline:
+	php vendor/bin/phpstan analyse -c phpstan.neon --generate-baseline=phpstan-baseline.neon --allow-empty-baseline
 
 phpcs:
 	php vendor/bin/phpcs --standard=phpcs.xml

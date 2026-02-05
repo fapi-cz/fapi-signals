@@ -120,16 +120,6 @@ class SettingsPage
         <?php
     }
 
-    private function checkbox(string $name, bool $checked): string
-    {
-        return sprintf(
-            '<input type="checkbox" name="%s[%s]" value="1" %s>',
-            esc_attr(Settings::OPTION_KEY),
-            esc_attr($name),
-            checked($checked, true, false)
-        );
-    }
-
     private function switchMarkup(string $name, bool $checked, string $ariaLabel, bool $defaultWhenNotSet = false): string
     {
         $out = '<label class="fapi-switch" aria-label="' . esc_attr($ariaLabel) . '">';
