@@ -94,24 +94,26 @@ class PayloadBuilder
         if (count($profile) === 0) {
             return [];
         }
+        $profileForPixel = $profile;
+        unset($profileForPixel['ip'], $profileForPixel['user_agent']);
         $out = [];
-        $meta = $this->buildMetaUserData($profile);
+        $meta = $this->buildMetaUserData($profileForPixel);
         if (count($meta) > 0) {
             $out['meta'] = $meta;
         }
-        $ga4 = $this->buildGa4PixelUserData($profile);
+        $ga4 = $this->buildGa4PixelUserData($profileForPixel);
         if (count($ga4) > 0) {
             $out['ga4'] = $ga4;
         }
-        $tiktok = $this->buildTikTokUserData($profile);
+        $tiktok = $this->buildTikTokUserData($profileForPixel);
         if (count($tiktok) > 0) {
             $out['tiktok'] = $tiktok;
         }
-        $pinterest = $this->buildPinterestUserData($profile);
+        $pinterest = $this->buildPinterestUserData($profileForPixel);
         if (count($pinterest) > 0) {
             $out['pinterest'] = $pinterest;
         }
-        $linkedin = $this->buildLinkedinUserData($profile);
+        $linkedin = $this->buildLinkedinUserData($profileForPixel);
         if (count($linkedin) > 0) {
             $out['linkedin'] = $linkedin;
         }

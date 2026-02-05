@@ -2,6 +2,7 @@
 
 namespace FapiSignalsPlugin\ServerSide;
 
+use FapiSignalsPlugin\Debug\Logger;
 use FapiSignalsPlugin\Settings;
 
 class PageViewDispatcher
@@ -38,14 +39,22 @@ class PageViewDispatcher
             return new \WP_REST_Response(['status' => 'skipped'], 200);
         }
 
+        $debugPayloads = [];
         foreach ($payloads as $endpoint => $payload) {
-            wp_remote_post($endpoint, [
+            $remoteResponse = wp_remote_post($endpoint, [
                 'headers' => ['Content-Type' => 'application/json'],
                 'body' => wp_json_encode($payload),
                 'timeout' => 5,
             ]);
+            if (Logger::isEnabled($settings)) {
+                $debugPayloads[] = Logger::debugPayloadEntry($endpoint, $payload, $remoteResponse);
+            }
         }
 
-        return new \WP_REST_Response(['status' => 'sent', 'event_id' => $eventId], 200);
+        $response = ['status' => 'sent', 'event_id' => $eventId];
+        if ($debugPayloads !== []) {
+            $response['debug_payloads'] = $debugPayloads;
+        }
+        return new \WP_REST_Response($response, 200);
     }
 }

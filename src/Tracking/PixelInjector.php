@@ -49,6 +49,8 @@ class PixelInjector
             'debug_disable_production_conversions' => $settings['debug_disable_production_conversions'],
             'direct_injection' => $directInjection,
             'event_id' => $eventId,
+            'pageview_url' => rest_url('fapi-signals/v1/pageview'),
+            'pageview_url_fallback' => home_url('/?rest_route=/fapi-signals/v1/pageview'),
             'server_side' => [
                 'meta' => $settings['meta_capi_pageview_enabled'],
                 'tiktok' => $settings['tiktok_ss_pageview_enabled'],
@@ -166,13 +168,27 @@ class PixelInjector
                 if (cfg.settings.server_side.tiktok) platforms.push('tiktok');
                 if (cfg.settings.server_side.pinterest) platforms.push('pinterest');
                 if (cfg.settings.server_side.linkedin) platforms.push('linkedin');
+                var pageviewUrl = cfg.settings.pageview_url || '/wp-json/fapi-signals/v1/pageview';
+                var pageviewFallback = cfg.settings.pageview_url_fallback;
                 platforms.forEach(function (platform) {
-                    fetch('/wp-json/fapi-signals/v1/pageview', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ platform: platform, url: url, event_id: eventId })
-                    }).then(function (res) { return res.json(); }).then(function (data) {
+                    var bodyStr = JSON.stringify({ platform: platform, url: url, event_id: eventId });
+                    function doReq(u) {
+                        return fetch(u, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: bodyStr });
+                    }
+                    doReq(pageviewUrl).then(function (res) {
+                        if (!res.ok && res.status === 404 && pageviewFallback) {
+                            return res.text().then(function () { return doReq(pageviewFallback); });
+                        }
+                        return res;
+                    }).then(function (res) {
+                        return res.json().catch(function () { return { status: 'error', message: 'Invalid response' }; });
+                    }).then(function (data) {
                         log('Server-side', platform, data);
+                        if (data.debug_payloads && data.debug_payloads.length) {
+                            data.debug_payloads.forEach(function (entry, i) {
+                                console.log('[FAPI Signals] Server-side #' + (i + 1), entry.endpoint, entry.payload, entry.response || null);
+                            });
+                        }
                     }).catch(function (err) {
                         log('Server-side error', platform, err);
                     });
